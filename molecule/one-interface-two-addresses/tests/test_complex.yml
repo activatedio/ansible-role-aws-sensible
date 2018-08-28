@@ -1,0 +1,19 @@
+# Molecule managed
+
+---
+command:
+  "ip addr | grep inet | grep eth0 | wc -l":
+    exit-status: 0
+    stdout:
+      - 3
+  hostname:
+    exit-status: 0
+    stdout:
+      - instance
+file:
+  /etc/hosts:
+    exists: true
+    owner: root
+    group: root
+    contains:
+      - "internal instance"

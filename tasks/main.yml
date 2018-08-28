@@ -37,24 +37,20 @@
     warn: false
   with_items: "{{ aws_interface_names }}"
   register: aws_ip_addresses_raw
-  when: aws_interface_names|length > 1
 - name: Set IP address fact
   set_fact:
     aws_ip_addresses: "{{ aws_ip_addresses | default([]) + [ item.stdout ] }}"
   with_items: "{{ aws_ip_addresses_raw.results }}"
-  when: aws_interface_names|length > 1
 - name: Set Subnet raw fact
   shell: "curl http://169.254.169.254/latest/meta-data/network/interfaces/macs/{{ aws_interfaces[item] }}/subnet-ipv4-cidr-block/ | grep -o \"\\/.*\""
   args:
     warn: false
   with_items: "{{ aws_interface_names }}"
   register: aws_subnet_masks_raw
-  when: aws_interface_names|length > 1
 - name: Set Subnet mask fact
   set_fact:
     aws_subnet_masks: "{{ aws_subnet_masks | default([]) + [ item.stdout ] }}"
   with_items: "{{ aws_subnet_masks_raw.results }}"
-  when: aws_interface_names|length > 1
 - name: Create netplan.yml
   template:
     src: netplan.yml.j2

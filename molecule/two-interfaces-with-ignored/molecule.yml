@@ -16,7 +16,7 @@ provisioner:
   lint:
     name: ansible-lint
 scenario:
-  name: complex
+  name: two-interfaces-with-ignored
 verifier:
   name: goss
   lint:
