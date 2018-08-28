@@ -4,7 +4,7 @@ Role Name
 Sensible setting for aws hosts, including:
 
 * Hostname
-* IP Addresses for secondary interfaces
+* Additional assigned ip addresses
 
 Requirements
 ------------
