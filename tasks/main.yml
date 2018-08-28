@@ -24,7 +24,7 @@
   set_fact:
     aws_interface_names: "{{ aws_interface_names | default([]) + [ item ] }}"
   with_items: "{{ aws_interface_names_all }}"
-  when: item not in aws_interface_names_excuded
+  when: item not in (aws_interface_names_excuded | default([]))
 - name: Query interfaces map
   shell: "ip -o link | awk '{ print $2 \" \\\"\" $17 \"\\\"\"}' | grep -v lo:"
   register: ip_link_map_shell
