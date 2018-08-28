@@ -1,0 +1,59 @@
+---
+- name: Set hostname
+  hostname: name={{ inventory_hostname }}
+- name: Add hostname to /etc/hosts
+  lineinfile:
+    dest=/etc/hosts
+    regexp="^{{ ansible_default_ipv4.address }}.+$"
+    line="{{ ansible_default_ipv4.address }} {{ ansible_fqdn }} {{ ansible_hostname }}"
+#"
+- name: Query interfaces list
+  shell: "ip -o link | awk '{ print \"- \"$2 }' | grep -v lo: | sed s/://g"
+  register: ip_link_list_shell
+- name: Set interface list fact
+  set_fact:
+    aws_interface_names: "{{ ip_link_list_shell.stdout | from_yaml }}"
+- name: Query interfaces map
+  shell: "ip -o link | awk '{ print $2 \" \\\"\" $17 \"\\\"\"}' | grep -v lo:"
+  register: ip_link_map_shell
+  when: aws_interface_names|length > 1
+- name: Set interface map fact
+  set_fact:
+    aws_interfaces: "{{ ip_link_map_shell.stdout | from_yaml }}"
+  when: aws_interface_names|length > 1
+- name: Set IP address raw fact
+  shell: "curl http://169.254.169.254/latest/meta-data/network/interfaces/macs/{{ aws_interfaces[item] }}/local-ipv4s/"
+  args:
+    warn: false
+  with_items: "{{ aws_interface_names }}"
+  register: aws_ip_addresses_raw
+  when: aws_interface_names|length > 1
+- name: Set IP address fact
+  set_fact:
+    aws_ip_addresses: "{{ aws_ip_addresses | default([]) + [ item.stdout ] }}"
+  with_items: "{{ aws_ip_addresses_raw.results }}"
+  when: aws_interface_names|length > 1
+- name: Set Subnet raw fact
+  shell: "curl http://169.254.169.254/latest/meta-data/network/interfaces/macs/{{ aws_interfaces[item] }}/subnet-ipv4-cidr-block/ | grep -o \"\\/.*\""
+  args:
+    warn: false
+  with_items: "{{ aws_interface_names }}"
+  register: aws_subnet_masks_raw
+  when: aws_interface_names|length > 1
+- name: Set Subnet mask fact
+  set_fact:
+    aws_subnet_masks: "{{ aws_subnet_masks | default([]) + [ item.stdout ] }}"
+  with_items: "{{ aws_subnet_masks_raw.results }}"
+  when: aws_interface_names|length > 1
+- name: Create netplan.yml
+  template:
+    src: netplan.yml.j2
+    dest: /etc/netplan/50-cloud-init.yaml
+    owner: root
+    group: root
+    mode: 0644
+  when: aws_interface_names|length > 1
+  notify:
+    - Apply netplan
+
+

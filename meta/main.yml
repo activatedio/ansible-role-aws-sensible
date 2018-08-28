@@ -1,0 +1,18 @@
+---
+galaxy_info:
+  role_name: aws-sensible
+  author: btomasini
+  description: Sensible settings for aws hosts
+  company: Activated, Inc.
+  license: MIT
+  min_ansible_version: 2.4
+  platforms:
+    - name: Ubuntu
+      versions:
+        - xenial
+        - bionic
+  galaxy_tags:
+    - aws
+    - system
+    - networking
+dependencies: []

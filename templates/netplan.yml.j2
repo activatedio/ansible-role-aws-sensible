@@ -1,0 +1,22 @@
+network:
+    version: 2
+    ethernets:
+{% for key in aws_interface_names %}
+{% set interface_index = loop.index - 1 %}
+{% if interface_index == 0 %}
+        {{ key }}:
+            dhcp4: true
+            match:
+                macaddress: {{ aws_interfaces[key] }}
+            set-name: {{ key }}
+{% else %}
+        {{ key }}:
+            match:
+                macaddress: {{ aws_interfaces[key] }}
+            set-name: {{ key }}
+            addresses: 
+{% for ip in aws_ip_addresses[interface_index].split('\n') %}
+                - {{ ip }}{{ aws_subnet_masks[interface_index]}}
+{% endfor %}
+{% endif %}
+{% endfor %}
