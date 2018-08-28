@@ -1,2 +1,4 @@
 ---
 # defaults file for ansible-role-system
+#
+aws_sensible_excluded_interfaces: [ '^docker.*$' ]

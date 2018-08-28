@@ -12,15 +12,25 @@
   register: ip_link_list_shell
 - name: Set interface list fact
   set_fact:
-    aws_interface_names: "{{ ip_link_list_shell.stdout | from_yaml }}"
+    aws_interface_names_all: "{{ ip_link_list_shell.stdout | from_yaml }}"
+- name: Build excluded interfaces list
+  set_fact:
+    aws_interface_names_excuded: "{{ aws_interface_names_excuded | default([]) + [ item[0] ] }}"
+  with_nested:
+    - "{{ aws_interface_names_all }}"
+    - "{{ aws_sensible_excluded_interfaces }}"
+  when: item[0] is search(item[1])
+- name: Filter interfaces list
+  set_fact:
+    aws_interface_names: "{{ aws_interface_names | default([]) + [ item ] }}"
+  with_items: "{{ aws_interface_names_all }}"
+  when: item not in aws_interface_names_excuded
 - name: Query interfaces map
   shell: "ip -o link | awk '{ print $2 \" \\\"\" $17 \"\\\"\"}' | grep -v lo:"
   register: ip_link_map_shell
-  when: aws_interface_names|length > 1
 - name: Set interface map fact
   set_fact:
     aws_interfaces: "{{ ip_link_map_shell.stdout | from_yaml }}"
-  when: aws_interface_names|length > 1
 - name: Set IP address raw fact
   shell: "curl http://169.254.169.254/latest/meta-data/network/interfaces/macs/{{ aws_interfaces[item] }}/local-ipv4s/"
   args:
@@ -52,7 +62,6 @@
     owner: root
     group: root
     mode: 0644
-  when: aws_interface_names|length > 1
   notify:
     - Apply netplan
 

@@ -1,0 +1,23 @@
+---
+dependency:
+  name: galaxy
+driver:
+  name: ec2
+lint:
+  name: yamllint
+platforms:
+  # Must export EC2_REGION=us-west-2
+  - name: instance
+    image: ami-944162ec
+    instance_type: t2.micro
+    vpc_subnet_id: subnet-705d3515
+provisioner:
+  name: ansible
+  lint:
+    name: ansible-lint
+scenario:
+  name: ignored-interfaces
+verifier:
+  name: goss
+  lint:
+    name: yamllint
