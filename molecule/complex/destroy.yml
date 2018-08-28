@@ -3,7 +3,7 @@
   hosts: localhost
   connection: local
   gather_facts: false
-  no_log: "{{ not (lookup('env', 'MOLECULE_DEBUG') | bool or molecule_yml.provisioner.log|default(false) | bool) }}"
+  # no_log: "{{ not (lookup('env', 'MOLECULE_DEBUG') | bool or molecule_yml.provisioner.log|default(false) | bool) }}"
   tasks:
     - block:
         - name: Populate instance config
@@ -20,19 +20,30 @@
       ec2:
         state: absent
         instance_ids: "{{ item.instance_ids }}"
+        wait: true
       register: server
       with_items: "{{ instance_conf }}"
       when: not skip_instances
-      async: 7200
-      poll: 0
 
-    - name: Wait for instance(s) deletion to complete
-      async_status:
-        jid: "{{ item.ansible_job_id }}"
-      register: ec2_jobs
-      until: ec2_jobs.finished
-      retries: 300
-      with_items: "{{ server.results }}"
+    - name: Destory EIP
+      ec2_eip:
+        device_id: "{{ item.eni0_id }}"
+        ip: "{{ item.address }}"
+        in_vpc: true
+        state: absent
+      with_items: "{{ instance_conf }}"
+
+    - name: Destroy network interface - 0
+      ec2_eni:
+        eni_id: "{{ item.eni0_id }}"
+        state: absent
+      with_items: "{{ instance_conf }}"
+
+    - name: Destroy network interface - 1
+      ec2_eni:
+        eni_id: "{{ item.eni1_id }}"
+        state: absent
+      with_items: "{{ instance_conf }}"
 
     # Mandatory configuration for Molecule to function.
 

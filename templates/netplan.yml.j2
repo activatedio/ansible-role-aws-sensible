@@ -3,20 +3,24 @@ network:
     ethernets:
 {% for key in aws_interface_names %}
 {% set interface_index = loop.index - 1 %}
+{% set aws_ip_addresses = aws_ip_addresses | default([]) %}
+{% set interface_addresses = [] %}
+{% if (aws_ip_addresses|length) > 0 %}
+{% set interface_addresses = aws_ip_addresses[interface_index].split('\n') %}
+{% endif %}
+        {{ key }}:
 {% if interface_index == 0 %}
-        {{ key }}:
             dhcp4: true
+{% endif %}
             match:
                 macaddress: {{ aws_interfaces[key] }}
             set-name: {{ key }}
-{% else %}
-        {{ key }}:
-            match:
-                macaddress: {{ aws_interfaces[key] }}
-            set-name: {{ key }}
+{% if (interface_index > 0) or (interface_addresses|length > 1) %}
             addresses: 
-{% for ip in aws_ip_addresses[interface_index].split('\n') %}
+{% for ip in interface_addresses %}
+{% if (interface_index > 0) or (loop.index > 1) %}
                 - {{ ip }}{{ aws_subnet_masks[interface_index]}}
+{% endif %}
 {% endfor %}
 {% endif %}
 {% endfor %}

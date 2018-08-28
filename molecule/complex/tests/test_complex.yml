@@ -5,7 +5,7 @@ command:
   "ip addr | grep inet | grep eth0 | wc -l":
     exit-status: 0
     stdout:
-      - 1
+      - 3
   "ip addr | grep inet | grep eth1 | wc -l":
     exit-status: 0
     stdout:

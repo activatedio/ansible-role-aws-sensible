@@ -6,7 +6,7 @@
     dest=/etc/hosts
     regexp="^{{ ansible_default_ipv4.address }}.+$"
     line="{{ ansible_default_ipv4.address }} {{ ansible_fqdn }} {{ ansible_hostname }}"
-#"
+# "
 - name: Query interfaces list
   shell: "ip -o link | awk '{ print \"- \"$2 }' | grep -v lo: | sed s/://g"
   register: ip_link_list_shell
@@ -64,5 +64,3 @@
     mode: 0644
   notify:
     - Apply netplan
-
-
